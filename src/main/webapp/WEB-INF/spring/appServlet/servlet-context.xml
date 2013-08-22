@@ -3,9 +3,15 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xmlns:beans="http://www.springframework.org/schema/beans"
 	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:mongo="http://www.springframework.org/schema/data/mongo"
 	xsi:schemaLocation="http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc.xsd
 		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
-		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+		http://www.springframework.org/schema/tx 
+		http://www.springframework.org/schema/tx/spring-tx-2.5.xsd
+		http://www.springframework.org/schema/data/mongo
+        http://www.springframework.org/schema/data/mongo/spring-mongo-1.0.xsd"
+        default-autowire="byName" default-lazy-init="true">
 
 	<!-- DispatcherServlet Context: defines this servlet's request-processing infrastructure -->
 	
@@ -23,6 +29,41 @@
 	
 	<context:component-scan base-package="com.wzlee.rescue" />
 	
+	<beans:bean id="multipartResolver"  class="org.springframework.web.multipart.commons.CommonsMultipartResolver"> 
+        <beans:property name="maxUploadSize">
+        	<beans:value>11048576</beans:value>
+       	</beans:property>
+    </beans:bean>
 	
+	<context:component-scan base-package="com.wzlee.hgm123" />
+	
+	<!-- 引入属性文件 -->
+	<context:property-placeholder location="classpath:config.properties" />
+	
+	<mongo:mongo host="${mongo.host}" port="${mongo.port}">
+		<mongo:options connections-per-host="${mongo.connectionsPerHost}"
+			threads-allowed-to-block-for-connection-multiplier="${mongo.threadsAllowedToBlockForConnectionMultiplier}"
+			connect-timeout="${mongo.connectTimeout}" max-wait-time="${mongo.maxWaitTime}"
+			auto-connect-retry="${mongo.autoConnectRetry}" socket-keep-alive="${mongo.socketKeepAlive}"
+			socket-timeout="${mongo.socketTimeout}" slave-ok="${mongo.slaveOk}"
+			write-number="1" write-timeout="0" write-fsync="true" />
+	</mongo:mongo>
+
+	<mongo:db-factory id="mongoDbFactory" dbname="hgm" />
+  	<mongo:mapping-converter id="converter" />
+
+	<!-- <mongo:db-factory dbname="${mongo.dbname}" mongo-ref="mongo"/> -->
+
+	<beans:bean id="mongoTemplate" class="org.springframework.data.mongodb.core.MongoTemplate">
+		<beans:constructor-arg name="mongo" ref="mongo"/>
+		<beans:constructor-arg name="databaseName" value="hgm" />
+	</beans:bean>
+	
+	<beans:bean class="org.springframework.data.mongodb.gridfs.GridFsTemplate">
+    	<beans:constructor-arg ref="mongoDbFactory" />
+    	<beans:constructor-arg ref="converter" />
+  	</beans:bean>
+	
+	<mongo:repositories base-package="com.wzlee.hgm123.repositories"/>
 	
 </beans:beans>
